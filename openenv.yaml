@@ -6,3 +6,12 @@ type: space
 runtime: fastapi
 app: server.app:app
 port: 7860
+
+tasks:
+  - id: easy
+    name: DB Pool Exhaustion
+  - id: medium
+    name: Checkout Deploy Regression
+  - id: hard
+    name: Multi-service Cascade
+

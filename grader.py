@@ -105,6 +105,10 @@ def grade_episode(state: InternalState, task_module) -> GradeResult:
     )
 
     summary = _build_summary(state, components, total)
+    # Force score into strictly (0, 1) range per hackathon validation rules
+    # (prevents exact 0.0 or 1.0)
+    total = max(0.01, min(0.99, total))
+
     return GradeResult(
         total=round(total, 4),
         components=components,
