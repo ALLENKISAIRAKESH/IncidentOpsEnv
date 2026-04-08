@@ -11,19 +11,25 @@ pinned: false
 
 A production incident response simulation environment built for the OpenEnv framework.
 
-## Overview
-This environment simulates a Site Reliability Engineering (SRE) / DevOps incident response workflow. The SRE agent is provided with an initial observation (an active incident) and must explore the environment (fetch logs, metrics, alerts) to diagnose and mitigate the root cause.
+## Motivation
+SRE (Site Reliability Engineering) is a high-stakes, high-complexity domain where AI agents must bridge the gap between **raw telemetry** (logs/metrics) and **logical remediation** (rolling back, scaling). Unlike simple web-navigation, `IncidentOpsEnv` requires an agent to form hypotheses, communicate with human-like templates, and make safety-critical decisions. This environment provides a reproducible sandbox to train and evaluate the next generation of "AI-SREs."
 
-## Tasks
-The environment currently ships with 3 carefully curated scenarios:
-- **Easy (`task_easy`)**: A straightforward database connection pool exhaustion issue.
-- **Medium (`task_medium`)**: A noisy checkout degradation caused by a bad code deploy.
-- **Hard (`task_hard`)**: A complex, multi-service cascade failure caused by a feature flag rollout, requiring targeted escalation.
+## Tasks & Difficulty
 
-## Environment Architecture
-- **Deterministic State**: Built entirely on typed `pydantic` models for actions, observations, and rewards (`models.py`).
-- **Rule-Based Grader**: Employs a zero-variance, rule-based grading system (`grader.py`) checking logic accuracy, time-to-mitigate, penalty avoidance, and communication quality.
-- **Sub-Step Granularity**: Agents issue single strongly-typed bash/terminal style commands as structured JSON (e.g., `view_logs(payment-api)`).
+| Task ID | Name | Difficulty | Description |
+| :--- | :--- | :--- | :--- |
+| `easy` | DB Pool Leak | **Easy** | A database connection pool exhaustion. Requires basic log checking and a service restart. |
+| `medium` | Deploy Regression | **Medium** | A bad deployment causing checkout failures. Requires checking Recent Deploys and performing a Rollback. |
+| `hard` | Cascade Failure | **Hard** | A feature flag rollout causing a multi-service cascade. Requires dependency mapping and targeted flag disabling. |
+
+## Environment Architecture & Reward Logic
+- **Partial Progress Signal**: Unlike binary (0 or 1) environments, `IncidentOpsEnv` rewards agents for each correct step:
+    - `+0.05` for viewing relevant evidence (alerts, logs).
+    - `+0.10` for correct severity classification.
+    - `+0.20` for applying the correct mitigation.
+- **Safety Penalties**: Agents are penalized `-0.20` for "harmful mitigations" (e.g., restarting the wrong production database).
+- **Communication**: Extra credit for posting status updates and escalating to the correct Ops team.
+- **Deterministic Engine**: Built on typed `pydantic` models with zero-randomness in outcomes for reproducible benchmarking.
 
 ## Observation and Action Spaces
 - **Observation Space**: `obs.incident_summary`, `obs.known_alerts`, `obs.retrieved_logs`, `obs.affected_services`. (See `models.Observation` for strictly typed Schema).
