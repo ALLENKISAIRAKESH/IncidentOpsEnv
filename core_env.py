@@ -73,26 +73,61 @@ class IncidentOpsEnv(Environment):
     SUPPORTS_CONCURRENT_SESSIONS = True
     VALID_TASKS = ("easy", "medium", "hard")
 
-    def __init__(self, task: str = "easy") -> None:
-        if task not in self.VALID_TASKS:
-            raise ValueError(f"task must be one of {self.VALID_TASKS}, got {task!r}")
-        self._task_name = task
+    def __init__(self, task_id: Optional[str] = None, **kwargs) -> None:
+        """
+        Initialize the environment. 
+        Note: The server may pass task_id here or via reset().
+        """
+        self._task_name = task_id or "easy"
+        if self._task_name not in self.VALID_TASKS:
+            # Default to easy if invalid task received
+            self._task_name = "easy"
+            
         self._task_module: Optional[types.ModuleType] = None
         self._obs: Optional[Observation] = None
         self._state: Optional[InternalState] = None
+
+    @classmethod
+    def get_task_ids(cls) -> list[str]:
+        return list(cls.VALID_TASKS)
 
     # ------------------------------------------------------------------
     # Public interface
     # ------------------------------------------------------------------
 
-    def reset(self) -> Observation:
+    def reset(self, task_id: Optional[str] = None, **kwargs) -> Observation:
         """Load task data and return the initial observation."""
+        if task_id and task_id in self.VALID_TASKS:
+            self._task_name = task_id
+            
         module_name = f"tasks.task_{self._task_name}"
         self._task_module = importlib.import_module(module_name)
 
         factory_fn = getattr(self._task_module, f"get_{self._task_name}_task")
         self._obs, self._state = factory_fn()
         return self._obs
+
+    def get_metadata(self) -> dict:
+        """Return environment and task metadata for the benchmark suite."""
+        return {
+            "name": "incident-ops-env",
+            "version": "1.0.0",
+            "description": "Production SRE Incident Simulator",
+            "task_ids": self.get_task_ids(),
+            "action_space": [e.value for e in ActionType],
+            "observation_space": {
+                "incident_id": "str",
+                "affected_services": "list[str]",
+                "remaining_step_budget": "int"
+            },
+            "grading_enabled": True
+        }
+
+    def close(self) -> None:
+        """Cleanup resources."""
+        self._state = None
+        self._task_module = None
+        self._obs = None
 
     @property
     def state(self) -> State:

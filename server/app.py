@@ -6,12 +6,22 @@ from openenv.core.env_server.http_server import create_app
 from models import Action, Observation
 from core_env import IncidentOpsEnv
 
+from grader import grade_episode
+
+def environment_grader(env: IncidentOpsEnv):
+    """Bridge between the environment instance and the rule-based grader."""
+    if env.internal_state is None or env.task_module is None:
+        return 0.0
+    grade = grade_episode(env.internal_state, env.task_module)
+    return float(grade.total)
+
 app = create_app(
     IncidentOpsEnv,
     Action,
     Observation,
     env_name="incident-ops-env",
     max_concurrent_envs=10,
+    grader=environment_grader,
 )
 
 import gradio as gr
