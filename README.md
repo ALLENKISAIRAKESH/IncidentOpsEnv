@@ -1,59 +1,63 @@
+# 🚀 IncidentOpsEnv: Production-Grade SRE Simulation
+
+[![OpenEnv](https://img.shields.io/badge/OpenEnv-Compliant-success)](https://github.com/openenv/openenv)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+**IncidentOpsEnv** is a high-fidelity Site Reliability Engineering (SRE) simulator designed to evaluate the troubleshooting and remediation capabilities of AI agents. It mirrors real-world production environments, complete with microservices, dependency cascades, and signal noise.
+
 ---
-title: IncidentOpsEnv
-emoji: 🚨
-colorFrom: red
-colorTo: yellow
-sdk: docker
-pinned: false
----
 
-# IncidentOpsEnv 🚨
+## 🏗️ System Architecture
 
-A production incident response simulation environment built for the OpenEnv framework.
+```mermaid
+graph TD
+    User["🌍 Users"] --> LB["⚖️ Load Balancer"]
+    LB --> Frontend["💻 Frontend Service"]
+    Frontend --> Checkout["🛒 Checkout Service"]
+    Frontend --> Auth["🔐 Auth Service"]
+    Checkout --> Orders["📦 Orders Service"]
+    Orders --> Inventory["📂 Inventory Service"]
+    Orders --> DB[("(RDS) Postgres")]
+    Inventory --> Redis["⚡ Redis Cache"]
+```
 
-## Motivation
-SRE (Site Reliability Engineering) is a high-stakes, high-complexity domain where AI agents must bridge the gap between **raw telemetry** (logs/metrics) and **logical remediation** (rolling back, scaling). Unlike simple web-navigation, `IncidentOpsEnv` requires an agent to form hypotheses, communicate with human-like templates, and make safety-critical decisions. This environment provides a reproducible sandbox to train and evaluate the next generation of "AI-SREs."
+## 🎯 Task Matrix
 
-## Tasks & Difficulty
-
-| Task ID | Name | Difficulty | Description |
+| Task ID | Scenario | Primary Challenge | Target Remediation |
 | :--- | :--- | :--- | :--- |
-| `easy` | DB Pool Leak | **Easy** | A database connection pool exhaustion. Requires basic log checking and a service restart. |
-| `medium` | Deploy Regression | **Medium** | A bad deployment causing checkout failures. Requires checking Recent Deploys and performing a Rollback. |
-| `hard` | Cascade Failure | **Hard** | A feature flag rollout causing a multi-service cascade. Requires dependency mapping and targeted flag disabling. |
+| `easy` | DB Pool Exhaustion | Traffic Spike | `scale_service` (DB) |
+| `medium` | Deploy Regression | Buggy Code in Checkout | `rollback_deploy` (Checkout) |
+| `hard` | Multi-service Cascade | Dependency failure | `scale_service` + `restart` |
 
-## Environment Architecture & Reward Logic
-- **Partial Progress Signal**: Unlike binary (0 or 1) environments, `IncidentOpsEnv` rewards agents for each correct step:
-    - `+0.05` for viewing relevant evidence (alerts, logs).
-    - `+0.10` for correct severity classification.
-    - `+0.20` for applying the correct mitigation.
-- **Safety Penalties**: Agents are penalized `-0.20` for "harmful mitigations" (e.g., restarting the wrong production database).
-- **Communication**: Extra credit for posting status updates and escalating to the correct Ops team.
-- **Deterministic Engine**: Built on typed `pydantic` models with zero-randomness in outcomes for reproducible benchmarking.
+## 📊 Reward Signal Architecture
 
-## Observation and Action Spaces
-- **Observation Space**: `obs.incident_summary`, `obs.known_alerts`, `obs.retrieved_logs`, `obs.affected_services`. (See `models.Observation` for strictly typed Schema).
-- **Action Space**: `action_type` (Enum spanning 15 SRE verbs like `view_logs`, `scale_service`), `target_service`, `severity`, `hypothesis`. (See `models.Action`).
+Our environment uses **Shaped Rewards** to provide granular feedback to agents:
 
-## Baseline Scores
-- **Easy**: 0.95 (GPT-4o), 0.80 (GPT-4o-mini)
-- **Medium**: 0.85 (GPT-4o), 0.60 (GPT-4o-mini)
-- **Hard**: 0.70 (GPT-4o), 0.20 (GPT-4o-mini)
+*   **Discovery (+0.05):** Viewing logs or alerts that reveal root cause evidence.
+*   **Correct Hypothesis (+0.20):** Formulating a root cause that matches environment state.
+*   **Failed Attempt (-0.15):** Trying to resolve without fixing the underlying issue.
+*   **Resolution (+0.99):** Successfully returning the system to target SLIs.
 
-## Usage & Inference
-A baseline inference script `inference.py` is included to interact with the environment. Configure the required OpenEnv execution variables:
+## 🛠️ Getting Started
 
-```sh
-export API_BASE_URL="https://api.openai.com/v1"
-export MODEL_NAME="gpt-4o"
-export HF_TOKEN="hf_your_hugging_face_token"
+### Prerequisites
+*   Python 3.10+
+*   `pip install -r requirements.txt`
 
+### Local Execution
+```bash
 python inference.py --task easy
 ```
 
-## Reproducibility & Docker
-Compatible with Hugging Face Spaces (Docker SDK). You can build and run it directly:
-```sh
-docker build -t incident-ops-env .
-docker run -it -e OPENAI_API_KEY=$OPENAI_API_KEY incident-ops-env
-```
+### Manual Dashboard
+Once deployed to a Hugging Face Space, access the visual playground at:
+`https://huggingface.co/spaces/<user>/incident-ops-env/`
+
+---
+
+## 🛠️ Compliance Metadata
+
+*   **Runtime**: FastAPI / Uvicorn
+*   **Interface**: OpenEnv v0.2.2
+*   **Concurrency**: Enabled (Isolation via Session ID)
+*   **Score Range**: (0.01, 0.99)
