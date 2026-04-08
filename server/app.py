@@ -24,6 +24,10 @@ app = create_app(
     grader=environment_grader,
 )
 
+@app.get("/")
+async def root():
+    return {"message": "IncidentOpsEnv API is live!", "tasks": IncidentOpsEnv.get_task_ids()}
+
 import gradio as gr
 try:
     from app import app as gradio_app
