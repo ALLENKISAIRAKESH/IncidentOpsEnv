@@ -224,7 +224,8 @@ def get_alerts() -> list:
     return ALERTS
 
 def get_logs(service: str) -> list:
-    return LOGS.get(service, [])
+    combined = {**LOGS, **NOISE_LOGS}
+    return combined.get(service, [])
 
 def get_metrics(service: str):
     return METRICS.get(service)

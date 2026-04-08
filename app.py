@@ -20,9 +20,50 @@ def initialize_env(task_name):
     
     return state, state["history"], obs_to_markdown(obs), gr.update(interactive=True)
 
+def get_topology_map(obs):
+    """Generates a visual topology representing service health."""
+    services = {
+        "checkout-service": "✅",
+        "payment-api": "✅",
+        "auth-service": "✅",
+        "database": "✅",
+        "cache-layer": "✅",
+        "order-worker": "✅",
+        "fraud-detector": "✅"
+    }
+    
+    # Update status based on affected services
+    for svc in obs.affected_services:
+        if svc in services:
+            services[svc] = "❌"
+            
+    # Also check what has been retrieved
+    for svc in obs.retrieved_logs.keys():
+        if svc in services and services[svc] != "❌":
+            services[svc] = "🔍"
+
+    topology = f"""
+    ```mermaid
+    graph LR
+        User((User)) --> Checkout["{services['checkout-service']} Checkout Service"]
+        Checkout --> Payment["{services['payment-api']} Payment API"]
+        Checkout --> Order["{services['order-worker']} Order Worker"]
+        Payment --> DB["{services['database']} Database"]
+        Payment --> Fraud["{services['fraud-detector']} Fraud Detector"]
+        Checkout --> Cache["{services['cache-layer']} Cache Layer"]
+        Order --> DB
+    ```
+    *(Legend: ✅ Healthy | ❌ Degraded | 🔍 Investigating)*
+    """
+    return topology
+
 def obs_to_markdown(obs):
     md = f"### 🚨 Active Incident: {obs.incident_id} ({obs.task_name})\n"
     md += f"**Status:** {obs.current_status} | **Steps Remaining:** {obs.remaining_step_budget}\n\n"
+    
+    md += "#### 🌐 System Topology\n"
+    md += get_topology_map(obs) + "\n\n"
+    
     md += f"**Affected Services:** {', '.join(obs.affected_services)}\n\n"
     md += f"> **Summary Explorer:** {obs.incident_summary}\n\n"
     
@@ -71,22 +112,20 @@ def take_action(state, action_type, target_svc, severity, hypothesis, team, flag
     
     try:
         action = Action(**kwargs)
-        result = env.step(action)
-        
-        obs = result.observation
-        reward = result.reward
+        obs = env.step(action)
         
         # Log to chat format
         action_str = f"Executed: {action.action_type.value}"
         if hasattr(action, 'target_service') and action.target_service: action_str += f" on {action.target_service.value}"
         
-        result_str = f"Result (Reward: {reward.scalar:+.2f}):\n{reward.rationale}"
-        if result.done:
-            summary = result.info.get('summary', 'Episode concluded.')
-            result_str += f"\n\n*** EPISODE FINISHED ***\n{summary}"
+        result_str = f"Result (Reward: {obs.reward:+.2f}):\n{obs.last_action_result}"
+        if obs.done:
+            # When done, core_env.py puts grade summary in obs.last_action_result or similar
+            # For simplicity, we just show it's finished
+            result_str += f"\n\n*** EPISODE FINISHED ***\nFinal Score: {obs.final_score:.2f}"
             
         state["history"].append((action_str, result_str))
-        interactive = not result.done
+        interactive = not obs.done
         
         return state, state["history"], obs_to_markdown(obs), gr.update(interactive=interactive)
         
