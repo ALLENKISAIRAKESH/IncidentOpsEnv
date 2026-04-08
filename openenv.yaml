@@ -1,0 +1,8 @@
+spec_version: 1
+name: incident-ops-env
+description: "A production-grade SRE incident response simulator for evaluating agentic troubleshooting capabilities."
+tags: ["sre", "devops", "simulation", "rl", "agent-evaluation"]
+type: space
+runtime: fastapi
+app: server.app:app
+port: 7860
