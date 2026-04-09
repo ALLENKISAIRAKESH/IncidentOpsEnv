@@ -123,6 +123,18 @@ class IncidentOpsEnv(Environment):
             "grading_enabled": True
         }
 
+    def close(self):
+        """Standard cleanup."""
+        pass
+
+
+if __name__ == "__main__":
+    # Standard OpenEnv entry point check
+    print("Environment Loaded Successfully.")
+    e = IncidentOpsEnv(task="easy")
+    o = e.reset()
+    print(f"Test reset complete: {o.incident_id}")
+
     def close(self) -> None:
         """Cleanup resources."""
         self._state = None

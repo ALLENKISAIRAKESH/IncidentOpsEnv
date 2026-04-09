@@ -168,6 +168,8 @@ def _score_mitigation(state: InternalState) -> float:
     if state.mitigation_applied is not None:
         # Applied something but it was wrong  partial credit for attempting
         return 0.2
+    if __name__ == "__main__":
+        print("Grader Logic Loaded.")
     return 0.0
 
 
