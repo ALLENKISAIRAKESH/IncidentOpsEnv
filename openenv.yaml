@@ -14,4 +14,3 @@ tasks:
     name: Checkout Deploy Regression
   - id: hard
     name: Multi-service Cascade
-
