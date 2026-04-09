@@ -16,6 +16,7 @@ from models import (
     FeatureFlagName, InternalState, LogEntry, MetricSnapshot, Observation,
     RootCauseHypothesis, ScoreComponents, ServiceName, SeverityLevel, TeamName,
 )
+from .utils import generate_noise_logs
 
 INCIDENT_ID = "INC-002"
 TASK_NAME = "checkout_faulty_deploy"
@@ -162,8 +163,14 @@ DEPENDENCY_MAP: dict = {
     "payment-api": ["database"],
 }
 
+# Noise logs
+NOISE_LOGS: dict = {
+    "auth-service": generate_noise_logs("auth-service"),
+    "fraud-detector": generate_noise_logs("fraud-detector"),
+}
 
-def get_medium_task() -> tuple[Observation, object]:
+
+def get_medium_task() -> tuple[Observation, InternalState]:
     """Return initial (observation, internal_state) for the medium task."""
 
     initial_obs = Observation(
@@ -243,9 +250,9 @@ def get_dependency_map() -> dict:
 RELEVANT_LOG_SERVICES = {"checkout-service", "cache-layer"}
 HARMFUL_MITIGATIONS = {
     # Restarting cache is irrelevant and disruptive
-    (ActionType.RESTART_SERVICE, "cache-layer"),
+    (ActionType.RESTART_SERVICE, ServiceName.CACHE_LAYER),
     # Rolling back cache deploy is incorrect  that deploy is not the cause
-    (ActionType.ROLLBACK_DEPLOY, "cache-layer"),
+    (ActionType.ROLLBACK_DEPLOY, ServiceName.CACHE_LAYER),
     # Incorrect root cause that leads to wrong fix
-    (ActionType.RESTART_SERVICE, "checkout-service"),  # restart  rollback for regression
+    (ActionType.RESTART_SERVICE, ServiceName.CHECKOUT_SERVICE),  # restart  rollback for regression
 }

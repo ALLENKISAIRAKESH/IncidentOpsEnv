@@ -123,18 +123,6 @@ class IncidentOpsEnv(Environment):
             "grading_enabled": True
         }
 
-    def close(self):
-        """Standard cleanup."""
-        pass
-
-
-if __name__ == "__main__":
-    # Standard OpenEnv entry point check
-    print("Environment Loaded Successfully.")
-    e = IncidentOpsEnv(task="easy")
-    o = e.reset()
-    print(f"Test reset complete: {o.incident_id}")
-
     def close(self) -> None:
         """Cleanup resources."""
         self._state = None
@@ -427,7 +415,14 @@ if __name__ == "__main__":
         except ValueError:
             at_enum = None
 
-        is_harmful = (at_enum, target) in harmful_set
+        # Normalize harmful check to handle both strings and enums in the set
+        is_harmful = False
+        for h_type, h_target in harmful_set:
+            h_target_val = h_target.value if hasattr(h_target, 'value') else h_target
+            if at_enum == h_type and target == h_target_val:
+                is_harmful = True
+                break
+
         if is_harmful:
             state.harmful_mitigation_applied = True
             state.score_components.safety_score = max(
@@ -521,3 +516,11 @@ if __name__ == "__main__":
             if val is not None:
                 parts.append(str(val.value) if hasattr(val, "value") else str(val))
         return "|".join(parts)
+
+
+if __name__ == "__main__":
+    # Standard OpenEnv entry point check
+    print("Environment Loaded Successfully.")
+    e = IncidentOpsEnv(task_id="easy")
+    o = e.reset()
+    print(f"Test reset complete: {o.incident_id}")

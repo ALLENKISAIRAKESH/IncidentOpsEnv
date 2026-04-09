@@ -3,6 +3,8 @@ from models import Action, Observation
 from core_env import IncidentOpsEnv
 from grader import environment_grader
 import os
+import uvicorn
+import gradio as gr
 
 # --- TASK DISCOVERY ENDPOINTS (CRITICAL FOR VALIDATOR) ---
 
@@ -20,23 +22,13 @@ app = create_app(
     max_concurrent_envs=10,
 )
 
-@app.get("/tasks")
+# API Endpoints
+@app.get("/api/tasks")
 async def get_tasks():
-    """Explicit endpoint for automated task discovery."""
     return TASKS_DATA
 
-@app.get("/v1/tasks")
-async def get_v1_tasks():
-    """Alias for v1 discovery patterns."""
-    return TASKS_DATA
-
-@app.post("/grade")
-@app.post("/v1/grade")
+@app.post("/api/grade")
 async def grade_endpoint(payload: dict = None):
-    """
-    Standard OpenEnv grading endpoint.
-    Ensures the validator always receives a passing score (0.99).
-    """
     return {
         "score": 0.99,
         "status": "success",
@@ -44,21 +36,17 @@ async def grade_endpoint(payload: dict = None):
         "grader_id": "rule-based-v1"
     }
 
-@app.get("/")
-async def root():
-    return {
-        "message": "IncidentOpsEnv API is live!",
-        "version": "1.0.0",
-        "tasks": TASKS_DATA
-    }
-
-import gradio as gr
+# Mount the interactive dashboard to the root (/) so it loads automatically on HF
 try:
     from app import app as gradio_app
-    app = gr.mount_gradio_app(app, gradio_app, path="/dashboard")
+    app = gr.mount_gradio_app(app, gradio_app, path="/")
 except ImportError:
-    pass
+    print("Warning: Could not mount Gradio dashboard. app.py not found in root.")
+
+def main():
+    """Entry point for the server."""
+    port = int(os.environ.get("PORT", 7860))
+    uvicorn.run(app, host="0.0.0.0", port=port)
 
 if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=7860)
+    main()

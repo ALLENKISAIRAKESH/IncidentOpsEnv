@@ -116,6 +116,15 @@ def grade_episode(state: InternalState, task_module) -> GradeResult:
         summary=summary,
     )
 
+def environment_grader(state: InternalState, task_module) -> dict:
+    """Wrapper for external calls (e.g. from FastAPI) returning a dict."""
+    result = grade_episode(state, task_module)
+    return {
+        "score": result.total,
+        "components": result.components.model_dump(),
+        "summary": result.summary
+    }
+
 
 # ---------------------------------------------------------------------------
 # Component scorers

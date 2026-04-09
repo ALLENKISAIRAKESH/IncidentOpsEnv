@@ -26,6 +26,7 @@ from models import (
     FeatureFlagName, InternalState, LogEntry, MetricSnapshot, Observation,
     RootCauseHypothesis, ScoreComponents, ServiceName, SeverityLevel, TeamName,
 )
+from .utils import generate_noise_logs
 
 INCIDENT_ID = "INC-003"
 TASK_NAME = "multi_signal_feature_flag"
@@ -244,8 +245,13 @@ DEPENDENCY_MAP: dict = {
     "payment-api": ["database", "auth-service"],
 }
 
+# Noise logs
+NOISE_LOGS: dict = {
+    "database": generate_noise_logs("database"),
+}
 
-def get_hard_task() -> tuple[Observation, object]:
+
+def get_hard_task() -> tuple[Observation, InternalState]:
     """Return initial (observation, internal_state) for the hard task."""
 
     initial_obs = Observation(
@@ -309,7 +315,8 @@ def get_alerts() -> list:
     return ALERTS
 
 def get_logs(service: str) -> list:
-    return LOGS.get(service, [])
+    combined = {**LOGS, **NOISE_LOGS}
+    return combined.get(service, [])
 
 def get_metrics(service: str):
     return METRICS.get(service)
@@ -327,11 +334,11 @@ def get_dependency_map() -> dict:
 RELEVANT_LOG_SERVICES = {"auth-service", "checkout-service", "fraud-detector"}
 HARMFUL_MITIGATIONS = {
     # Restarting auth without disabling flag won't fix the token format mismatch
-    (ActionType.RESTART_SERVICE, "auth-service"),
+    (ActionType.RESTART_SERVICE, ServiceName.AUTH_SERVICE),
     # Rolling back the deploy won't help  the deploy was a no-op without the flag
-    (ActionType.ROLLBACK_DEPLOY, "auth-service"),
+    (ActionType.ROLLBACK_DEPLOY, ServiceName.AUTH_SERVICE),
     # Disabling fraud-detector is dangerous and incorrect
     (ActionType.DISABLE_FEATURE_FLAG, FeatureFlagName.FRAUD_DETECTION_V3),
     # Scaling auth won't fix a config mismatch
-    (ActionType.SCALE_SERVICE, "auth-service"),
+    (ActionType.SCALE_SERVICE, ServiceName.AUTH_SERVICE),
 }

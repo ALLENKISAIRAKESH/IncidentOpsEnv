@@ -16,31 +16,31 @@ def initialize_env(task_name):
     
     init_msg = f"Environment Initialized: {task_name.upper()}\nIncident ID: {obs.incident_id}\n\nSummary:\n{obs.incident_summary}"
     
-    state["history"].append(("System", init_msg))
+    state["history"].append({"role": "assistant", "content": init_msg})
     
     return state, state["history"], obs_to_markdown(obs), gr.update(interactive=True)
 
 def get_topology_map(obs):
     """Generates a visual topology representing service health."""
     services = {
-        "checkout-service": "",
-        "payment-api": "",
-        "auth-service": "",
-        "database": "",
-        "cache-layer": "",
-        "order-worker": "",
-        "fraud-detector": ""
+        "checkout-service": "✅",
+        "payment-api": "✅",
+        "auth-service": "✅",
+        "database": "✅",
+        "cache-layer": "✅",
+        "order-worker": "✅",
+        "fraud-detector": "✅"
     }
     
     # Update status based on affected services
     for svc in obs.affected_services:
         if svc in services:
-            services[svc] = ""
+            services[svc] = "❌"
             
     # Also check what has been retrieved
     for svc in obs.retrieved_logs.keys():
-        if svc in services and services[svc] != "":
-            services[svc] = ""
+        if svc in services and services[svc] != "❌":
+            services[svc] = "🔍"
 
     topology = f"""
     ```mermaid
@@ -53,39 +53,39 @@ def get_topology_map(obs):
         Checkout --> Cache["{services['cache-layer']} Cache Layer"]
         Order --> DB
     ```
-    *(Legend:  Healthy |  Degraded |  Investigating)*
+    *(Legend: ✅ Healthy | ❌ Degraded | 🔍 Investigating)*
     """
     return topology
 
 def obs_to_markdown(obs):
-    md = f"###  Active Incident: {obs.incident_id} ({obs.task_name})\n"
+    md = f"### 🚨 Active Incident: {obs.incident_id} ({obs.task_name})\n"
     md += f"**Status:** {obs.current_status} | **Steps Remaining:** {obs.remaining_step_budget}\n\n"
     
-    md += "####  System Topology\n"
+    md += "#### 🗺️ System Topology\n"
     md += get_topology_map(obs) + "\n\n"
     
     md += f"**Affected Services:** {', '.join(obs.affected_services)}\n\n"
     md += f"> **Summary Explorer:** {obs.incident_summary}\n\n"
     
     if obs.known_alerts:
-        md += "####  Known Alerts\n"
+        md += "#### 🔔 Known Alerts\n"
         for a in obs.known_alerts:
             md += f"- [{a.severity.upper()}] **{a.service}**: {a.message}\n"
             
     if obs.feature_flag_states:
-        md += "####  Feature Flags\n"
+        md += "#### 🚩 Feature Flags\n"
         for f in obs.feature_flag_states:
             md += f"- **{f.flag_name}**: {'ENABLED' if f.enabled else 'DISABLED'} ({f.rollout_pct}%)\n"
             
     if obs.retrieved_logs:
-        md += "####  Retrieved Logs\n"
+        md += "#### 📜 Retrieved Logs\n"
         for svc, logs in obs.retrieved_logs.items():
             md += f"**{svc}**:\n"
             for log in logs[-3:]: # show last 3 for brevity
                 md += f"  - `[{log.level}] {log.message}`\n"
                 
     if obs.retrieved_metrics:
-        md += "####  Retrieved Metrics\n"
+        md += "#### 📊 Retrieved Metrics\n"
         for svc, m in obs.retrieved_metrics.items():
             md += f"- **{svc}**: Errors: {m.error_rate_pct}% | Latency p99: {m.latency_p99_ms}ms | RPS: {m.requests_per_sec}\n"
             
@@ -98,7 +98,7 @@ def take_action(state, action_type, target_svc, severity, hypothesis, team, flag
     env = state["env"]
     
     if env.internal_state.resolved or env.internal_state.episode_step >= env.internal_state.max_steps:
-        state["history"].append(("System", "Episode is already finished. Please reset."))
+        state["history"].append({"role": "assistant", "content": "Episode is already finished. Please reset."})
         return state, state["history"], "Episode Over.", gr.update(interactive=False)
         
     # Construct Action
@@ -116,26 +116,29 @@ def take_action(state, action_type, target_svc, severity, hypothesis, team, flag
         
         # Log to chat format
         action_str = f"Executed: {action.action_type.value}"
-        if hasattr(action, 'target_service') and action.target_service: action_str += f" on {action.target_service.value}"
+        if hasattr(action, 'target_service') and action.target_service: 
+            action_str += f" on {action.target_service}"
         
         result_str = f"Result (Reward: {obs.reward:+.2f}):\n{obs.last_action_result}"
         if obs.done:
-            # When done, core_env.py puts grade summary in obs.last_action_result or similar
-            # For simplicity, we just show it's finished
             result_str += f"\n\n*** EPISODE FINISHED ***\nFinal Score: {obs.final_score:.2f}"
             
-        state["history"].append((action_str, result_str))
-        interactive = not obs.done
+        state["history"].append({"role": "user", "content": action_str})
+        state["history"].append({"role": "assistant", "content": result_str})
         
+        interactive = not obs.done
         return state, state["history"], obs_to_markdown(obs), gr.update(interactive=interactive)
         
     except Exception as e:
-        state["history"].append(("Error executing action", str(e)))
+        import traceback
+        error_msg = f"Error executing action: {str(e)}"
+        print(traceback.format_exc())
+        state["history"].append({"role": "assistant", "content": error_msg})
         return state, state["history"], "Error", gr.update()
 
 # --- Gradio UI Layout ---
 with gr.Blocks(title="IncidentOpsEnv Dashboard") as app:
-    gr.Markdown("#  IncidentOpsEnv - Interactive SRE Dashboard")
+    gr.Markdown("# 🔍 IncidentOpsEnv - Interactive SRE Dashboard")
     gr.Markdown("Step into the shoes of a Site Reliability Engineer tracking down production incidents. Select a simulation below to begin testing your hypothesis & command capabilities!")
     
     state_var = gr.State()
@@ -143,9 +146,9 @@ with gr.Blocks(title="IncidentOpsEnv Dashboard") as app:
     with gr.Row():
         with gr.Column(scale=1):
             task_select = gr.Radio(["easy", "medium", "hard"], value="easy", label="1. Select Incident Difficulty")
-            init_btn = gr.Button("Initialize Simulator ", variant="primary")
+            init_btn = gr.Button("🚀 Initialize Simulator", variant="primary")
             
-            gr.Markdown("###  Action Controls")
+            gr.Markdown("### 🕹️ Action Controls")
             action_type_dd = gr.Dropdown([e.value for e in ActionType], label="Action Type")
             target_svc_dd = gr.Dropdown(["None"] + [e.value for e in ServiceName], label="Target Service", value="None")
             severity_dd = gr.Dropdown(["None"] + [e.value for e in SeverityLevel], label="Severity Level", value="None")
@@ -154,10 +157,10 @@ with gr.Blocks(title="IncidentOpsEnv Dashboard") as app:
             flag_dd = gr.Dropdown(["None"] + [e.value for e in FeatureFlagName], label="Feature Flag Target", value="None")
             msg_dd = gr.Dropdown(["None"] + [e.value for e in MessageTemplate], label="Message Template", value="None")
             
-            exec_btn = gr.Button("Execute Action ", interactive=False)
+            exec_btn = gr.Button("⚡ Execute Action", interactive=False)
             
         with gr.Column(scale=2):
-            dashboard_display = gr.Markdown("### Dashboard Offline. Please Initialize.")
+            dashboard_display = gr.Markdown("### ⚠️ Dashboard Offline. Please Initialize.")
             
             chatbot = gr.Chatbot(label="Action & Event Log", height=400)
             
