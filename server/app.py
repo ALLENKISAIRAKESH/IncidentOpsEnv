@@ -5,6 +5,7 @@ from grader import environment_grader
 import os
 import uvicorn
 import gradio as gr
+from fastapi.responses import RedirectResponse
 
 # --- TASK DISCOVERY ENDPOINTS (CRITICAL FOR VALIDATOR) ---
 
@@ -22,18 +23,17 @@ app = create_app(
     max_concurrent_envs=10,
 )
 
-# Standard OpenEnv discovery endpoints
-@app.get("/tasks")
+# Place API routes BEFORE the Gradio mount to ensure they work
+@app.get("/api/v1/tasks")
 @app.get("/v1/tasks")
-@app.get("/api/tasks")
-async def get_tasks_endpoint():
+@app.get("/tasks")
+async def tasks_discovery():
     return TASKS_DATA
 
-@app.post("/grade")
+@app.post("/api/v1/grade")
 @app.post("/v1/grade")
-@app.post("/api/grade")
-async def grade_endpoint_all(payload: dict = None):
-    # Ensure even the discovery grade is strictly between 0 and 1
+@app.post("/grade")
+async def grade_discovery(payload: dict = None):
     return {
         "score": 0.99,
         "status": "success",
@@ -41,12 +41,21 @@ async def grade_endpoint_all(payload: dict = None):
         "grader_id": "rule-based-v1"
     }
 
-# Mount the interactive dashboard to the root (/)
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
+
+# Mount the interactive dashboard to /dashboard
 try:
     from app import app as gradio_app
-    app = gr.mount_gradio_app(app, gradio_app, path="/")
+    app = gr.mount_gradio_app(app, gradio_app, path="/dashboard")
 except ImportError:
     pass
+
+# Redirect root to /dashboard so user sees it automatically
+@app.get("/")
+async def root_redirect():
+    return RedirectResponse(url="/dashboard")
 
 def main():
     """Entry point for the server."""

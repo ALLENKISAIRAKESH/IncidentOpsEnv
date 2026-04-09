@@ -4,11 +4,12 @@ from core_env import IncidentOpsEnv
 from models import Action, ActionType, ServiceName, SeverityLevel, RootCauseHypothesis, MessageTemplate, TeamName, FeatureFlagName
 
 def initialize_env(task_name):
+    print(f">> INITIALIZING TASK: {task_name}")
     try:
-        # Initialize env - ensuring task_id is used consistently
-        # The core_env.py uses task_id as the parameter name
+        # Initialize env
         env = IncidentOpsEnv(task_id=task_name)
         obs = env.reset()
+        print(f">> ENV RESET SUCCESSFUL. INCIDENT: {obs.incident_id}")
         
         # Store initial obs in state
         state = {
@@ -19,12 +20,13 @@ def initialize_env(task_name):
         init_msg = f"Environment Initialized: {task_name.upper()}\nIncident ID: {obs.incident_id}\n\nSummary:\n{obs.incident_summary}"
         
         state["history"].append({"role": "assistant", "content": init_msg})
+        print(f">> HISTORY UPDATED. RETURNING TO UI.")
         
         return state, state["history"], obs_to_markdown(obs), gr.update(interactive=True)
     except Exception as e:
+        print(f">> INITIALIZATION FAILED: {str(e)}")
         import traceback
-        error_trace = traceback.format_exc()
-        print(f"FAILED TO START SIMULATOR:\n{error_trace}")
+        traceback.print_exc()
         return None, [{"role": "assistant", "content": f"Failed to initialize simulator: {str(e)}"}], f"### ❌ Initialization Error\n```\n{str(e)}\n```", gr.update(interactive=False)
 
 def get_topology_map(obs):
