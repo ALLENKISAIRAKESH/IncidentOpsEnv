@@ -1,5 +1,5 @@
-[FAIL] scalar-space: Not ready for multi-mode deployment
-
-Issues found:
-  - Missing uv.lock - run 'uv lock' to generate it
-  - server/app.py main() function not callable (missing if __name__ == '__main__')
+[FAIL] scalar-space: Not ready for multi-mode deployment
+
+Issues found:
+  - Missing uv.lock - run 'uv lock' to generate it
+  - server/app.py main() function not callable (missing if __name__ == '__main__')

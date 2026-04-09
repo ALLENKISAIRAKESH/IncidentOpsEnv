@@ -47,7 +47,7 @@ async def health():
 
 # Mount the interactive dashboard to /dashboard
 try:
-    from app import app as gradio_app
+    from app import dashboard as gradio_app
     app = gr.mount_gradio_app(app, gradio_app, path="/dashboard")
 except ImportError:
     pass
