@@ -1,7 +1,7 @@
 spec_version: 1
 name: incident-ops-env
-description: "A production-grade SRE incident response simulator for evaluating agentic troubleshooting capabilities."
-tags: ["sre", "devops", "simulation", "rl", "agent-evaluation"]
+description: "SRE Incident Response Simulation"
+tags: ["sre", "devops"]
 type: space
 runtime: fastapi
 app: server.app:app
@@ -9,8 +9,8 @@ port: 7860
 
 tasks:
   - id: easy
-    name: DB Pool Exhaustion
+    name: Easy Task
   - id: medium
-    name: Checkout Deploy Regression
+    name: Medium Task
   - id: hard
-    name: Multi-service Cascade
+    name: Hard Task
