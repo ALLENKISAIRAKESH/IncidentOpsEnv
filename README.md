@@ -1,3 +1,13 @@
+---
+title: IncidentOpsEnv
+emoji: fire
+colorFrom: red
+colorTo: blue
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # IncidentOpsEnv: Production-Grade SRE Simulation
 
 [![OpenEnv](https://img.shields.io/badge/OpenEnv-Compliant-success)](https://github.com/openenv/openenv)
