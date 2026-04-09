@@ -5,3 +5,4 @@ openenv-core[core]>=0.2.2
 uvicorn>=0.20.0
 httpx>=0.24.0
 fastapi>=0.100.0
+slowapi>=0.1.9
