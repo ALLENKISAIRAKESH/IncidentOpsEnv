@@ -31,42 +31,42 @@ INCIDENT_ID = "INC-003"
 TASK_NAME = "multi_signal_feature_flag"
 MAX_STEPS = 12
 
-# ─── Static evidence data ────────────────────────────────────────────────────
+#  Static evidence data 
 
 ALERTS = [
     AlertItem(
         alert_id="ALT-9800",
         service="auth-service",
         severity="critical",
-        message="Auth service token validation failure rate > 28% — sessions rejecting valid tokens",
+        message="Auth service token validation failure rate > 28%  sessions rejecting valid tokens",
         triggered_at="2024-04-01T09:05:00Z",
     ),
     AlertItem(
         alert_id="ALT-9801",
         service="checkout-service",
         severity="high",
-        message="Checkout latency p99 > 8s — users timing out at payment confirmation step",
+        message="Checkout latency p99 > 8s  users timing out at payment confirmation step",
         triggered_at="2024-04-01T09:06:30Z",
     ),
     AlertItem(
         alert_id="ALT-9802",
         service="order-worker",
         severity="medium",
-        message="Order processing job delays — queue depth at 3x normal level",
+        message="Order processing job delays  queue depth at 3x normal level",
         triggered_at="2024-04-01T09:07:00Z",
     ),
     AlertItem(
         alert_id="ALT-9803",
         service="fraud-detector",
         severity="medium",
-        message="Fraud detection anomaly score elevated — unusual transaction pattern detected",
+        message="Fraud detection anomaly score elevated  unusual transaction pattern detected",
         triggered_at="2024-04-01T09:08:00Z",
     ),
     AlertItem(
         alert_id="ALT-9804",
         service="cache-layer",
         severity="low",
-        message="Cache eviction rate slightly elevated — within tolerated bounds",
+        message="Cache eviction rate slightly elevated  within tolerated bounds",
         triggered_at="2024-04-01T09:04:00Z",
     ),
 ]
@@ -77,13 +77,13 @@ LOGS: dict = {
             timestamp="2024-04-01T09:03:10Z",
             level="INFO",
             service="auth-service",
-            message="Feature flag 'auth-v2' enabled at 09:00 UTC — rolling out to 100% traffic",
+            message="Feature flag 'auth-v2' enabled at 09:00 UTC  rolling out to 100% traffic",
         ),
         LogEntry(
             timestamp="2024-04-01T09:03:45Z",
             level="ERROR",
             service="auth-service",
-            message="JWT signing key mismatch — auth-v2 uses RS256 but clients expect HS256",
+            message="JWT signing key mismatch  auth-v2 uses RS256 but clients expect HS256",
         ),
         LogEntry(
             timestamp="2024-04-01T09:04:00Z",
@@ -95,13 +95,13 @@ LOGS: dict = {
             timestamp="2024-04-01T09:04:30Z",
             level="ERROR",
             service="auth-service",
-            message="Sessions for authenticated users being invalidated — auth-v2 incompatible token format",
+            message="Sessions for authenticated users being invalidated  auth-v2 incompatible token format",
         ),
         LogEntry(
             timestamp="2024-04-01T09:05:00Z",
             level="WARN",
             service="auth-service",
-            message="Downstream services receiving 401 Unauthorized — all authenticated endpoints affected",
+            message="Downstream services receiving 401 Unauthorized  all authenticated endpoints affected",
         ),
     ],
     "checkout-service": [
@@ -109,13 +109,13 @@ LOGS: dict = {
             timestamp="2024-04-01T09:05:20Z",
             level="WARN",
             service="checkout-service",
-            message="401 Unauthorized from auth-service — checkout abandoning session for user_id=34812",
+            message="401 Unauthorized from auth-service  checkout abandoning session for user_id=34812",
         ),
         LogEntry(
             timestamp="2024-04-01T09:05:40Z",
             level="ERROR",
             service="checkout-service",
-            message="Session validation timeout — auth round-trips taking >7s due to retry logic",
+            message="Session validation timeout  auth round-trips taking >7s due to retry logic",
         ),
     ],
     "fraud-detector": [
@@ -137,7 +137,7 @@ LOGS: dict = {
             timestamp="2024-04-01T09:07:00Z",
             level="WARN",
             service="order-worker",
-            message="Order confirmation events reduced — fewer orders completing due to checkout auth failures",
+            message="Order confirmation events reduced  fewer orders completing due to checkout auth failures",
         ),
     ],
     "cache-layer": [
@@ -145,7 +145,7 @@ LOGS: dict = {
             timestamp="2024-04-01T09:04:10Z",
             level="INFO",
             service="cache-layer",
-            message="Cache eviction slightly elevated — routine pattern, no action needed",
+            message="Cache eviction slightly elevated  routine pattern, no action needed",
         ),
     ],
 }
@@ -201,7 +201,7 @@ DEPLOYS: list = [
         deployed_at="2024-04-01T08:45:00Z",
         deployed_by="ci-bot",
         status="success",
-        notes="Infrastructure prep for auth-v2 feature flag — no functional change without flag",
+        notes="Infrastructure prep for auth-v2 feature flag  no functional change without flag",
     ),
     DeployRecord(
         deploy_id="DPLY-609",
@@ -210,7 +210,7 @@ DEPLOYS: list = [
         deployed_at="2024-03-31T17:00:00Z",
         deployed_by="engineer-mia",
         status="success",
-        notes="Model weight update — improved precision on international transactions",
+        notes="Model weight update  improved precision on international transactions",
     ),
 ]
 
@@ -252,7 +252,7 @@ def get_hard_task() -> tuple[Observation, object]:
         incident_id=INCIDENT_ID,
         task_name=TASK_NAME,
         incident_summary=(
-            "CRITICAL INCIDENT — Multiple services degraded simultaneously. "
+            "CRITICAL INCIDENT  Multiple services degraded simultaneously. "
             "Auth token failures, elevated checkout latency, order job delays, "
             "and fraud detection anomalies all firing at once. "
             "A feature flag was recently enabled. Determine root cause and respond safely."
@@ -261,7 +261,7 @@ def get_hard_task() -> tuple[Observation, object]:
         affected_services=["auth-service", "checkout-service", "order-worker", "fraud-detector"],
         severity_guessable_signals=(
             "Auth failures cascade into checkout, jobs, and fraud systems. "
-            "Auth is a core dependency. Feature flag 'auth-v2' was enabled at ~09:00 UTC — "
+            "Auth is a core dependency. Feature flag 'auth-v2' was enabled at ~09:00 UTC  "
             "same time as incident onset. Security implications possible."
         ),
         remaining_step_budget=MAX_STEPS,
@@ -328,7 +328,7 @@ RELEVANT_LOG_SERVICES = {"auth-service", "checkout-service", "fraud-detector"}
 HARMFUL_MITIGATIONS = {
     # Restarting auth without disabling flag won't fix the token format mismatch
     (ActionType.RESTART_SERVICE, "auth-service"),
-    # Rolling back the deploy won't help — the deploy was a no-op without the flag
+    # Rolling back the deploy won't help  the deploy was a no-op without the flag
     (ActionType.ROLLBACK_DEPLOY, "auth-service"),
     # Disabling fraud-detector is dangerous and incorrect
     (ActionType.DISABLE_FEATURE_FLAG, FeatureFlagName.FRAUD_DETECTION_V3),

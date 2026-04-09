@@ -1,16 +1,16 @@
 """
-IncidentOpsEnv — Rule-Based Grader
+IncidentOpsEnv  Rule-Based Grader
 ===================================
 Computes a structured score from the InternalState at the end of an episode.
 
 Score breakdown (total = 1.0):
-  evidence_score       0.15  — viewed the right signals
-  severity_score       0.15  — classified severity correctly
-  cause_score          0.20  — correct root-cause hypothesis
-  mitigation_score     0.25  — applied the right fix on the right target
-  communication_score  0.10  — posted a status update (+ escalated if required)
-  efficiency_score     0.10  — resolved without wasting the step budget
-  safety_score         0.05  — no harmful mitigations applied (starts full, penalised)
+  evidence_score       0.15   viewed the right signals
+  severity_score       0.15   classified severity correctly
+  cause_score          0.20   correct root-cause hypothesis
+  mitigation_score     0.25   applied the right fix on the right target
+  communication_score  0.10   posted a status update (+ escalated if required)
+  efficiency_score     0.10   resolved without wasting the step budget
+  safety_score         0.05   no harmful mitigations applied (starts full, penalised)
 
 All sub-scores are in [0, 1].  Final weighted sum is in [0, 1].
 Negative terminal penalty  applied when the episode ends without resolution.
@@ -166,7 +166,7 @@ def _score_mitigation(state: InternalState) -> float:
     if state.mitigation_correct:
         return 1.0
     if state.mitigation_applied is not None:
-        # Applied something but it was wrong — partial credit for attempting
+        # Applied something but it was wrong  partial credit for attempting
         return 0.2
     return 0.0
 
@@ -198,7 +198,7 @@ def _score_communication(state: InternalState) -> float:
 def _score_efficiency(state: InternalState) -> float:
     """
     Reward finishing earlier. Steps used = episode_step.
-    Full credit if resolved in ≤ 60 % of budget.
+    Full credit if resolved in  60 % of budget.
     Scales down linearly to 0 at 100 % of budget.
     Timeout (not resolved) gets 0.
     """
@@ -230,7 +230,7 @@ def _build_summary(state: InternalState, sc: ScoreComponents, total: float) -> s
     lines = [
         f"=== Episode Grade: {total:.2%} ===",
         f"  Incident   : {state.incident_id} ({state.task_name})",
-        f"  Resolved   : {'YES' if state.resolved else 'NO — timed out or never resolved'}",
+        f"  Resolved   : {'YES' if state.resolved else 'NO  timed out or never resolved'}",
         f"  Steps used : {state.episode_step}/{state.max_steps}",
         "",
         "  Score breakdown:",
@@ -245,21 +245,21 @@ def _build_summary(state: InternalState, sc: ScoreComponents, total: float) -> s
 
     # Verdict
     if total >= 0.85:
-        verdict = "EXCELLENT — optimal or near-optimal response"
+        verdict = "EXCELLENT  optimal or near-optimal response"
     elif total >= 0.65:
-        verdict = "GOOD — correct resolution with minor gaps"
+        verdict = "GOOD  correct resolution with minor gaps"
     elif total >= 0.45:
-        verdict = "PARTIAL — some correct steps but key errors"
+        verdict = "PARTIAL  some correct steps but key errors"
     else:
-        verdict = "POOR — significant errors or failed to resolve"
+        verdict = "POOR  significant errors or failed to resolve"
     lines += ["", f"  Verdict: {verdict}"]
 
     # Warnings
     if state.harmful_mitigation_applied:
-        lines.append("  ⚠️  WARNING: A harmful mitigation was applied — safety penalty incurred")
+        lines.append("    WARNING: A harmful mitigation was applied  safety penalty incurred")
     if state.premature_resolved:
-        lines.append("  ⚠️  WARNING: RESOLVE_INCIDENT called before mitigation — premature resolution")
+        lines.append("    WARNING: RESOLVE_INCIDENT called before mitigation  premature resolution")
     if state.spam_counter > 2:
-        lines.append(f"  ⚠️  WARNING: Spam detected — {state.spam_counter} repeated identical actions")
+        lines.append(f"    WARNING: Spam detected  {state.spam_counter} repeated identical actions")
 
     return "\n".join(lines)

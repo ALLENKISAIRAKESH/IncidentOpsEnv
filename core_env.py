@@ -1,5 +1,5 @@
 """
-IncidentOpsEnv — Main Environment
+IncidentOpsEnv  Main Environment
 ===================================
 A deterministic, step-based simulation environment for incident response.
 
@@ -189,7 +189,7 @@ class IncidentOpsEnv(Environment):
             scalar += R_TIMEOUT
             self._state.cumulative_reward += R_TIMEOUT
             done = True
-            result_text += "\n⏰ Step budget exhausted — episode terminated."
+            result_text += "\n Step budget exhausted  episode terminated."
 
         # Build reward
         grade = grade_episode(self._state, self._task_module) if done else None
@@ -219,7 +219,7 @@ class IncidentOpsEnv(Environment):
 
     @property
     def internal_state(self) -> Optional[InternalState]:
-        """Exposed for testing/debugging — not available to agent during episode."""
+        """Exposed for testing/debugging  not available to agent during episode."""
         return self._state
 
     # ------------------------------------------------------------------
@@ -288,7 +288,7 @@ class IncidentOpsEnv(Environment):
         if em.logs_viewed.get(svc):
             return 0.0, f"Logs for '{svc}' already retrieved."
         em.logs_viewed[svc] = True
-        lines = [f"  [{e.timestamp}] {e.level} — {e.message}" for e in logs]
+        lines = [f"  [{e.timestamp}] {e.level}  {e.message}" for e in logs]
         return R_NEW_EVIDENCE, f"Logs for {svc}:\n" + "\n".join(lines)
 
     def _do_check_metrics(self, action: Action) -> tuple[float, str]:
@@ -320,7 +320,7 @@ class IncidentOpsEnv(Environment):
             return 0.0, "Recent deploys already retrieved."
         em.deploys_checked = True
         lines = [
-            f"  [{d.deploy_id}] {d.service} {d.version} @ {d.deployed_at} by {d.deployed_by} — {d.status}"
+            f"  [{d.deploy_id}] {d.service} {d.version} @ {d.deployed_at} by {d.deployed_by}  {d.status}"
             + (f"\n    Notes: {d.notes}" if d.notes else "")
             for d in deploys
         ]
@@ -333,7 +333,7 @@ class IncidentOpsEnv(Environment):
         if em.dependency_viewed:
             return 0.0, "Dependency map already retrieved."
         em.dependency_viewed = True
-        lines = [f"  {svc} → [{', '.join(deps) if deps else 'none'}]" for svc, deps in dep_map.items()]
+        lines = [f"  {svc}  [{', '.join(deps) if deps else 'none'}]" for svc, deps in dep_map.items()]
         return R_NEW_EVIDENCE, "Dependency map:\n" + "\n".join(lines)
 
     def _do_inspect_flags(self) -> tuple[float, str]:
@@ -345,7 +345,7 @@ class IncidentOpsEnv(Environment):
         em.flags_inspected = True
         lines = [
             f"  {f.flag_name}: {'ENABLED' if f.enabled else 'disabled'} "
-            f"({f.rollout_pct}%) — last modified {f.last_modified}"
+            f"({f.rollout_pct}%)  last modified {f.last_modified}"
             for f in flags
         ]
         return R_NEW_EVIDENCE, "Feature flags:\n" + "\n".join(lines)
@@ -361,9 +361,9 @@ class IncidentOpsEnv(Environment):
         if sev == correct_val:
             self._state.severity_classified_correctly = True
             self._state.score_components.severity_score = 1.0
-            return R_CORRECT_SEVERITY, f"Severity classified as {sev.upper()} ✓ — matches ground truth."
+            return R_CORRECT_SEVERITY, f"Severity classified as {sev.upper()}   matches ground truth."
         else:
-            return R_WRONG_SEVERITY, f"Severity classified as {sev.upper()} ✗ — does not match incident severity."
+            return R_WRONG_SEVERITY, f"Severity classified as {sev.upper()}   does not match incident severity."
 
     def _do_hypothesize(self, action: Action) -> tuple[float, str]:
         if not action.hypothesis:
@@ -375,9 +375,9 @@ class IncidentOpsEnv(Environment):
         if hyp == correct_val:
             self._state.hypothesis_correct = True
             self._state.score_components.cause_score = 1.0
-            return R_CORRECT_CAUSE, f"Root cause hypothesis '{hyp}' ✓ — matches ground truth."
+            return R_CORRECT_CAUSE, f"Root cause hypothesis '{hyp}'   matches ground truth."
         else:
-            return R_WRONG_CAUSE, f"Root cause hypothesis '{hyp}' ✗ — incorrect."
+            return R_WRONG_CAUSE, f"Root cause hypothesis '{hyp}'   incorrect."
 
     def _do_restart_service(self, action: Action) -> tuple[float, str]:
         if not action.target_service:
@@ -423,7 +423,7 @@ class IncidentOpsEnv(Environment):
             )
             state.mitigation_applied = f"{action_type_str}({target})"
             return R_HARMFUL_MITIGATION, (
-                f"⚠️  Harmful mitigation applied: {action_type_str}({target}). "
+                f"  Harmful mitigation applied: {action_type_str}({target}). "
                 "This action is incorrect and potentially disruptive."
             )
 
@@ -439,13 +439,13 @@ class IncidentOpsEnv(Environment):
             state.mitigation_correct = True
             state.score_components.mitigation_score = 1.0
             return R_CORRECT_MITIGATION, (
-                f"✓ Correct mitigation applied: {action_type_str}({target}). "
+                f" Correct mitigation applied: {action_type_str}({target}). "
                 "Service is recovering."
             )
         else:
             state.mitigation_applied = f"{action_type_str}({target})"
             return R_WRONG_MITIGATION, (
-                f"✗ Mitigation {action_type_str}({target}) applied but is incorrect for this incident."
+                f" Mitigation {action_type_str}({target}) applied but is incorrect for this incident."
             )
 
     def _do_post_status_update(self, action: Action) -> tuple[float, str]:
@@ -460,7 +460,7 @@ class IncidentOpsEnv(Environment):
                 self._state.score_components.communication_score + 0.5
             )
             return R_COMMUNICATION, f"Status update posted: \"{msg}\""
-        return 0.0, "Status update already posted — no additional credit."
+        return 0.0, "Status update already posted  no additional credit."
 
     def _do_escalate_team(self, action: Action) -> tuple[float, str]:
         if not action.team_name:
@@ -470,7 +470,7 @@ class IncidentOpsEnv(Environment):
         self._state.escalation_done = True
 
         if not self._state.requires_escalation:
-            return R_WRONG_ESCALATION, f"Escalated to {team} — but this incident did not require escalation."
+            return R_WRONG_ESCALATION, f"Escalated to {team}  but this incident did not require escalation."
 
         correct_team = self._state.required_escalation_team
         correct_val = correct_team if isinstance(correct_team, str) else (correct_team.value if correct_team else None)
@@ -479,9 +479,9 @@ class IncidentOpsEnv(Environment):
             self._state.score_components.communication_score = (
                 self._state.score_components.communication_score + 0.5
             )
-            return R_CORRECT_ESCALATION, f"✓ Escalated to {team} — correct team notified."
+            return R_CORRECT_ESCALATION, f" Escalated to {team}  correct team notified."
         else:
-            return R_WRONG_ESCALATION, f"✗ Escalated to {team} — wrong team for this incident."
+            return R_WRONG_ESCALATION, f" Escalated to {team}  wrong team for this incident."
 
     def _do_resolve(self) -> tuple[float, str]:
         state = self._state
@@ -490,7 +490,7 @@ class IncidentOpsEnv(Environment):
             state.premature_resolved = True
             state.resolved = True
             return R_PREMATURE_RESOLVE, (
-                "⚠️  RESOLVE_INCIDENT called before any mitigation was applied. "
+                "  RESOLVE_INCIDENT called before any mitigation was applied. "
                 "Incident closed prematurely."
             )
         state.resolved = True

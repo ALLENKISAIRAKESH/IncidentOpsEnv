@@ -21,28 +21,28 @@ INCIDENT_ID = "INC-002"
 TASK_NAME = "checkout_faulty_deploy"
 MAX_STEPS = 9
 
-# ─── Static evidence data ────────────────────────────────────────────────────
+#  Static evidence data 
 
 ALERTS = [
     AlertItem(
         alert_id="ALT-9100",
         service="checkout-service",
         severity="high",
-        message="Checkout service error rate spiked to 42% — orders not completing",
+        message="Checkout service error rate spiked to 42%  orders not completing",
         triggered_at="2024-03-20T14:15:00Z",
     ),
     AlertItem(
         alert_id="ALT-9101",
         service="cache-layer",
         severity="medium",
-        message="Cache hit ratio dropped to 61% — elevated cache miss latency detected",
+        message="Cache hit ratio dropped to 61%  elevated cache miss latency detected",
         triggered_at="2024-03-20T14:14:30Z",
     ),
     AlertItem(
         alert_id="ALT-9102",
         service="order-worker",
         severity="low",
-        message="Order worker queue depth increased — downstream of checkout failures",
+        message="Order worker queue depth increased  downstream of checkout failures",
         triggered_at="2024-03-20T14:16:00Z",
     ),
 ]
@@ -59,19 +59,19 @@ LOGS: dict = {
             timestamp="2024-03-20T14:13:55Z",
             level="ERROR",
             service="checkout-service",
-            message="Order submission failed — stack trace: PromoCodeService.validate() returned null",
+            message="Order submission failed  stack trace: PromoCodeService.validate() returned null",
         ),
         LogEntry(
             timestamp="2024-03-20T14:14:02Z",
             level="ERROR",
             service="checkout-service",
-            message="500 Internal Server Error for POST /checkout/submit — promo validation crash",
+            message="500 Internal Server Error for POST /checkout/submit  promo validation crash",
         ),
         LogEntry(
             timestamp="2024-03-20T14:14:10Z",
             level="WARN",
             service="checkout-service",
-            message="v3.1.0 deployed 14:10 UTC — errors began immediately after. Previous version: v3.0.8",
+            message="v3.1.0 deployed 14:10 UTC  errors began immediately after. Previous version: v3.0.8",
         ),
     ],
     "cache-layer": [
@@ -79,7 +79,7 @@ LOGS: dict = {
             timestamp="2024-03-20T14:13:00Z",
             level="WARN",
             service="cache-layer",
-            message="Cache eviction triggered — TTL adjustment in progress (routine maintenance)",
+            message="Cache eviction triggered  TTL adjustment in progress (routine maintenance)",
         ),
         LogEntry(
             timestamp="2024-03-20T14:14:00Z",
@@ -93,7 +93,7 @@ LOGS: dict = {
             timestamp="2024-03-20T14:15:30Z",
             level="WARN",
             service="order-worker",
-            message="Queue depth rising — upstream checkout submission failures causing reduced inflow",
+            message="Queue depth rising  upstream checkout submission failures causing reduced inflow",
         ),
     ],
 }
@@ -133,7 +133,7 @@ DEPLOYS: list = [
         deployed_at="2024-03-20T14:10:00Z",
         deployed_by="engineer-prakash",
         status="success",
-        notes="Added promo code validation refactor — untested edge case in null handling",
+        notes="Added promo code validation refactor  untested edge case in null handling",
     ),
     DeployRecord(
         deploy_id="DPLY-549",
@@ -170,7 +170,7 @@ def get_medium_task() -> tuple[Observation, object]:
         incident_id=INCIDENT_ID,
         task_name=TASK_NAME,
         incident_summary=(
-            "INCIDENT ACTIVE — Checkout service showing >40% error rate. "
+            "INCIDENT ACTIVE  Checkout service showing >40% error rate. "
             "Customers unable to complete purchases. Cache latency alerts also firing. "
             "Multiple signals in play. Identify the root cause and respond."
         ),
@@ -178,7 +178,7 @@ def get_medium_task() -> tuple[Observation, object]:
         affected_services=["checkout-service"],
         severity_guessable_signals=(
             "Checkout failures are directly customer-facing. Revenue impact is occurring now. "
-            "Cache latency is also reported — determine if this is related or a red herring."
+            "Cache latency is also reported  determine if this is related or a red herring."
         ),
         remaining_step_budget=MAX_STEPS,
         allowed_actions=_allowed_actions(),
@@ -244,8 +244,8 @@ RELEVANT_LOG_SERVICES = {"checkout-service", "cache-layer"}
 HARMFUL_MITIGATIONS = {
     # Restarting cache is irrelevant and disruptive
     (ActionType.RESTART_SERVICE, "cache-layer"),
-    # Rolling back cache deploy is incorrect — that deploy is not the cause
+    # Rolling back cache deploy is incorrect  that deploy is not the cause
     (ActionType.ROLLBACK_DEPLOY, "cache-layer"),
     # Incorrect root cause that leads to wrong fix
-    (ActionType.RESTART_SERVICE, "checkout-service"),  # restart ≠ rollback for regression
+    (ActionType.RESTART_SERVICE, "checkout-service"),  # restart  rollback for regression
 }
