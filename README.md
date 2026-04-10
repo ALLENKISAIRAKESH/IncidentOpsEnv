@@ -1,6 +1,6 @@
 ---
 title: IncidentOpsEnv
-emoji: 🔥
+emoji: fire
 colorFrom: red
 colorTo: blue
 sdk: docker
@@ -22,9 +22,9 @@ A deterministic, step-based SRE incident response simulator for evaluating AI ag
 
 | Task ID | Incident Scenario | Correct Root Cause | Correct Mitigation |
 | :--- | :--- | :--- | :--- |
-| `easy` | Payment API failures — DB pool exhausted | `db_connection_pool_exhaustion` | `restart_service(payment-api)` |
-| `medium` | Checkout errors — bad code deploy | `bad_deploy_regression` | `rollback_deploy(checkout-service)` |
-| `hard` | Auth failures — feature flag misconfiguration | `feature_flag_misconfiguration` | `disable_feature_flag(auth-v2)` |
+| `easy` | Payment API failures - DB pool exhausted | `db_connection_pool_exhaustion` | `restart_service(payment-api)` |
+| `medium` | Checkout errors - bad code deploy | `bad_deploy_regression` | `rollback_deploy(checkout-service)` |
+| `hard` | Auth failures - feature flag misconfiguration | `feature_flag_misconfiguration` | `disable_feature_flag(auth-v2)` |
 
 ---
 
