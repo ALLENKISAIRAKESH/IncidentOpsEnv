@@ -105,7 +105,7 @@ def parse_action(text: str) -> Action:
 # ---------------------------------------------------------------------------
 
 def run_episode(task: str):
-    env = IncidentOpsEnv(task=task)
+    env = IncidentOpsEnv(task_id=task)
     obs = env.reset()
 
     # Hackathon stdout specification: exactly 3 line types format.

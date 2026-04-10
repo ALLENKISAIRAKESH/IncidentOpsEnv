@@ -1,6 +1,9 @@
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from core_env import IncidentOpsEnv
 from models import Action, ActionType, ServiceName, RootCauseHypothesis, FeatureFlagName, TeamName, SeverityLevel
-import sys
 
 def test_easy():
     print("--- Testing EASY task ---")
