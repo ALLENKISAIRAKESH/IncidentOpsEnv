@@ -185,16 +185,7 @@ async def tasks_discovery():
     return TASKS_DATA
 
 
-@app.post("/api/v1/grade")
-@app.post("/v1/grade")
-@app.post("/grade")
-async def grade_discovery(payload: dict = None):
-    return {
-        "score": 0.99,
-        "status": "success",
-        "message": "Task validation passed",
-        "grader_id": "rule-based-v1",
-    }
+
 
 
 @app.get("/health")
