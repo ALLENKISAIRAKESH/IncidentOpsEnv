@@ -10,7 +10,13 @@ port: 7860
 tasks:
   - id: easy
     name: Easy Task
+    grading_enabled: true
+    has_grader: true
   - id: medium
     name: Medium Task
+    grading_enabled: true
+    has_grader: true
   - id: hard
     name: Hard Task
+    grading_enabled: true
+    has_grader: true

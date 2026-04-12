@@ -81,16 +81,22 @@ TASKS_DATA = [
         "id": "easy",
         "name": "DB Pool Exhaustion",
         "description": "Traffic spike causing DB saturation",
+        "grading_enabled": True,
+        "has_grader": True
     },
     {
         "id": "medium",
         "name": "Checkout Deploy Regression",
         "description": "Buggy code in checkout service",
+        "grading_enabled": True,
+        "has_grader": True
     },
     {
         "id": "hard",
         "name": "Multi-service Cascade",
         "description": "Critical dependency failure",
+        "grading_enabled": True,
+        "has_grader": True
     },
 ]
 

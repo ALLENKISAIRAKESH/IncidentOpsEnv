@@ -1,6 +1,6 @@
 ---
 title: IncidentOpsEnv
-emoji: fire
+emoji: 🔥
 colorFrom: red
 colorTo: blue
 sdk: docker
